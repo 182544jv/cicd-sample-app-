@@ -1,6 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
+# Start from a clean build directory, so the script can run more than once
+rm -rf tempdir
 mkdir tempdir
 mkdir tempdir/templates
 mkdir tempdir/static
@@ -21,5 +23,10 @@ _EOF_
 
 cd tempdir || exit
 docker build -t sampleapp .
-docker run -t -d -p 5050:5050 --name samplerunning sampleapp
+
+# Remove the container of a previous build, if any (otherwise the name and
+# port 5050 are still in use)
+docker rm --force samplerunning 2> /dev/null || true
+
+docker run -t -d -p 5050:5050 --restart unless-stopped --name samplerunning sampleapp
 docker ps -a 
